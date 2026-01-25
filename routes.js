@@ -12,10 +12,12 @@ const jogosController = new JogosController();
 const emprestimoController = new EmprestimoController();
 const usuarioController = new UsuarioController();
 
-router.post('/register', usuarioController.registro);
-router.get('/login', usuarioController.login);
+// Em andamento...
+//router.post('/register', usuarioController.registro);
+//router.get('/login', usuarioController.login);
 
-router.get('/amigos/json', customJwtMiddleware, amigoController.exibirJson);
+//router.get('/amigos/json', customJwtMiddleware, amigoController.exibirJson);
+router.get('/amigos/json', amigoController.exibirJson);
 router.get('/jogos/json', jogosController.exibirJson);
 router.get('/emprestimos/json', emprestimoController.exibirJson);
 router.get('/amigos', amigoController.exibirAmigos);

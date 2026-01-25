@@ -59,8 +59,6 @@ class JogosService {
 
         return resultado;
     };
-
-
 }
 
 module.exports = JogosService;
