@@ -12,10 +12,6 @@ const jogosController = new JogosController();
 const emprestimoController = new EmprestimoController();
 const usuarioController = new UsuarioController();
 
-// Em andamento...
-//router.post('/register', usuarioController.registro);
-//router.get('/login', usuarioController.login);
-
 router.get('/amigos/pdf', amigoController.gerarPdf);
 router.get('/amigos/json', amigoController.exibirJson);
 router.get('/jogos/json', jogosController.exibirJson);

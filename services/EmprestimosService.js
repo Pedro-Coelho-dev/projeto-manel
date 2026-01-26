@@ -1,6 +1,7 @@
 const {Amigo} = require('../models');
 const {Jogo} = require('../models');
 const {Emprestimo} = require('../models');
+
 class EmprestimosService {
     constructor (model) {
         this.Emprestimo = model;
