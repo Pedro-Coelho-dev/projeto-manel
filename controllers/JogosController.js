@@ -62,10 +62,9 @@ class JogosController {
         res.status(200).json(data);
     }
 
-    // /jogos/pdf
+    // jogos/pdf
     gerarPdf = async (req, res) => {
         const jogos = await this.jogoService.getAllJogos();
-
         const doc = new PDFDocument({ margin: 50 });
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -77,29 +76,66 @@ class JogosController {
         doc.pipe(res);
 
         // Título
-        doc
-            .fontSize(18)
-            .text('Relatório de Jogos', { align: 'center' });
+        doc.fontSize(18).text('Relatório de Jogos', { align: 'center' });
+        doc.moveDown(2);
 
-        doc.moveDown();
+        let currentY = doc.y;
 
-        // Cabeçalho
-        doc.fontSize(12);
-        doc.text('ID', 50, doc.y, { continued: true });
-        doc.text('AmigoID', 100, doc.y, { continued: true });
-        doc.text('Título', 150, doc.y, { continued: true });
-        doc.text('Plataforma', 300, doc.y);
+        const largura = {
+            id: 40,
+            amigoId: 60,
+            titulo: 220,
+            plataforma: 180
+        };
 
-        doc.moveDown(0.5);
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        const colunas = {
+            id: 50,
+            amigoId: 50 + largura.id,
+            titulo: 50 + largura.id + largura.amigoId,
+            plataforma: 50 + largura.id + largura.amigoId + largura.titulo
+        };
 
-        // Dados
-        jogos.forEach(a => {
-            doc.moveDown(0.5);
-            doc.text(String(a.id), 50, doc.y, { continued: true });
-            doc.text(String(a.amigoId), 115, doc.y, { continued: true });
-            doc.text(a.titulo, 170, doc.y, { continued: true });
-            doc.text(a.plataforma, 325, doc.y);
+        doc.fontSize(12).font('Helvetica-Bold');
+        doc.text('ID', colunas.id, currentY, { width: largura.id });
+        doc.text('AmigoID', colunas.amigoId, currentY, { width: largura.amigoId });
+        doc.text('Título', colunas.titulo, currentY, { width: largura.titulo });
+        doc.text('Plataforma', colunas.plataforma, currentY, { width: largura.plataforma });
+
+        currentY += 18;
+
+        doc.moveTo(50, currentY).lineTo(550, currentY).stroke();
+        currentY += 10;
+
+        doc.font('Helvetica');
+
+        jogos.forEach(j => {
+            const textos = {
+                id: String(j.id),
+                amigoId: String(j.amigoId),
+                titulo: j.titulo,
+                plataforma: j.plataforma
+            };
+
+            const alturas = {
+                id: doc.heightOfString(textos.id, { width: largura.id }),
+                amigoId: doc.heightOfString(textos.amigoId, { width: largura.amigoId }),
+                titulo: doc.heightOfString(textos.titulo, { width: largura.titulo }),
+                plataforma: doc.heightOfString(textos.plataforma, { width: largura.plataforma })
+            };
+
+            const alturaLinha = Math.max(...Object.values(alturas));
+
+            doc.text(textos.id, colunas.id, currentY, { width: largura.id });
+            doc.text(textos.amigoId, colunas.amigoId, currentY, { width: largura.amigoId });
+            doc.text(textos.titulo, colunas.titulo, currentY, { width: largura.titulo });
+            doc.text(textos.plataforma, colunas.plataforma, currentY, { width: largura.plataforma });
+
+            currentY += alturaLinha + 8;
+
+            if (currentY > doc.page.height - 50) {
+                doc.addPage();
+                currentY = 50;
+            }
         });
 
         doc.end();
