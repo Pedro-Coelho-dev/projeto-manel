@@ -75,23 +75,73 @@ class AmigoController {
             .fontSize(18)
             .text('Relatório de Amigos', { align: 'center' });
 
-        doc.moveDown();
+        doc.moveDown(2);
+
+        // Configuração das colunas
+        const startX = 50;
+        let currentY = doc.y;
+
+        const colunas = {
+            id: 50,
+            nome: 150,
+            email: 250
+        };
+
+        const largura = {
+            id: 50,
+            nome: 200,
+            email: 250
+        };
 
         // Cabeçalho
-        doc.fontSize(12);
-        doc.text('ID', 50, doc.y, { continued: true });
-        doc.text('Nome', 100, doc.y, { continued: true });
-        doc.text('Email', 300, doc.y);
+        doc.fontSize(12).font('Helvetica-Bold');
+        doc.text('ID', colunas.id, currentY, { width: largura.id });
+        doc.text('Nome', colunas.nome, currentY, { width: largura.nome });
+        doc.text('Email', colunas.email, currentY, { width: largura.email });
 
-        doc.moveDown(0.5);
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        currentY += 20;
+
+        doc.moveTo(startX, currentY)
+        .lineTo(550, currentY)
+        .stroke();
+
+        currentY += 10;
 
         // Dados
+        doc.font('Helvetica');
+
         amigos.forEach(a => {
-            doc.moveDown(0.5);
-            doc.text(String(a.id), 50, doc.y, { continued: true });
-            doc.text(a.nome, 100, doc.y, { continued: true });
-            doc.text(a.email, 300, doc.y);
+            const idText = String(a.id);
+            const nomeText = a.nome;
+            const emailText = a.email;
+
+            // Calcula a altura necessária de cada célula
+            const alturaId = doc.heightOfString(idText, { width: largura.id });
+            const alturaNome = doc.heightOfString(nomeText, { width: largura.nome });
+            const alturaEmail = doc.heightOfString(emailText, { width: largura.email });
+
+            // Usa a maior altura da linha
+            const alturaLinha = Math.max(alturaId, alturaNome, alturaEmail);
+
+            doc.text(idText, colunas.id, currentY, {
+                width: largura.id
+            });
+
+            doc.text(nomeText, colunas.nome, currentY, {
+                width: largura.nome
+            });
+
+            doc.text(emailText, colunas.email, currentY, {
+                width: largura.email
+            });
+
+            currentY += alturaLinha + 10;
+
+            // Quebra de página automática
+            if (currentY > doc.page.height - 50) {
+                doc.addPage();
+                currentY = 50;
+            }
         });
 
         doc.end();

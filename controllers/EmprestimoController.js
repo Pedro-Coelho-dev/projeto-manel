@@ -52,7 +52,6 @@ class EmprestimoController {
     // /emprestimos/pdf
     gerarPdf = async (req, res) => {
         const emprestimos = await this.emprestimoService.getAllEmprestimos();
-
         const doc = new PDFDocument({ margin: 50 });
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -64,31 +63,77 @@ class EmprestimoController {
         doc.pipe(res);
 
         // Título
-        doc
-            .fontSize(18)
-            .text('Relatório de Emprestimos', { align: 'center' });
+        doc.fontSize(18).text('Relatório de Empréstimos', { align: 'center' });
+        doc.moveDown(2);
 
-        doc.moveDown();
+        let currentY = doc.y;
+
+        // Larguras equilibradas
+        const largura = {
+            id: 40,
+            jogoId: 60,
+            amigoId: 70,
+            dataInicio: 120,
+            dataFim: 120
+        };
+
+        // X calculado automaticamente
+        const colunas = {
+            id: 50,
+            jogoId: 50 + largura.id,
+            amigoId: 50 + largura.id + largura.jogoId,
+            dataInicio: 50 + largura.id + largura.jogoId + largura.amigoId,
+            dataFim: 50 + largura.id + largura.jogoId + largura.amigoId + largura.dataInicio
+        };
 
         // Cabeçalho
-        doc.fontSize(12);
-        doc.text('ID', 50, doc.y, { continued: true });
-        doc.text('JogoId', 100, doc.y, { continued: true });
-        doc.text('AmigoId', 150, doc.y, { continued: true });
-        doc.text('DataInicio', 200, doc.y, { continued: true });
-        doc.text('DataFim', 260, doc.y);
+        doc.fontSize(12).font('Helvetica-Bold');
+        doc.text('ID', colunas.id, currentY, { width: largura.id });
+        doc.text('JogoID', colunas.jogoId, currentY, { width: largura.jogoId });
+        doc.text('AmigoID', colunas.amigoId, currentY, { width: largura.amigoId });
+        doc.text('Data Início', colunas.dataInicio, currentY, { width: largura.dataInicio });
+        doc.text('Data Fim', colunas.dataFim, currentY, { width: largura.dataFim });
 
-        doc.moveDown(0.5);
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        currentY += 18;
+
+        doc.moveTo(50, currentY).lineTo(550, currentY).stroke();
+        currentY += 10;
 
         // Dados
+        doc.font('Helvetica');
+
         emprestimos.forEach(e => {
-            doc.moveDown(0.5);
-            doc.text(String(e.id), 50, doc.y, { continued: true });
-            doc.text(e.jogoId, 115, doc.y, { continued: true });
-            doc.text(e.amigoId, 190, doc.y, { continued: true });
-            doc.text(e.dataInicio, 255, doc.y, { continued: true });
-            doc.text(e.dataFim, 305, doc.y);
+            const textos = {
+                id: String(e.id),
+                jogoId: String(e.jogoId),
+                amigoId: String(e.amigoId),
+                dataInicio: e.dataInicio,
+                dataFim: e.dataFim
+            };
+
+            const alturas = {
+                id: doc.heightOfString(textos.id, { width: largura.id }),
+                jogoId: doc.heightOfString(textos.jogoId, { width: largura.jogoId }),
+                amigoId: doc.heightOfString(textos.amigoId, { width: largura.amigoId }),
+                dataInicio: doc.heightOfString(textos.dataInicio, { width: largura.dataInicio }),
+                dataFim: doc.heightOfString(textos.dataFim, { width: largura.dataFim })
+            };
+
+            const alturaLinha = Math.max(...Object.values(alturas));
+
+            doc.text(textos.id, colunas.id, currentY, { width: largura.id });
+            doc.text(textos.jogoId, colunas.jogoId, currentY, { width: largura.jogoId });
+            doc.text(textos.amigoId, colunas.amigoId, currentY, { width: largura.amigoId });
+            doc.text(textos.dataInicio, colunas.dataInicio, currentY, { width: largura.dataInicio });
+            doc.text(textos.dataFim, colunas.dataFim, currentY, { width: largura.dataFim });
+
+            currentY += alturaLinha + 8;
+
+            // Quebra de página
+            if (currentY > doc.page.height - 50) {
+                doc.addPage();
+                currentY = 50;
+            }
         });
 
         doc.end();
